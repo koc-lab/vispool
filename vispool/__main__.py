@@ -14,7 +14,7 @@ MODEL_NAME = "distilbert-base-uncased"
 TASK_NAME = "cola"
 # TASK_NAME = "mrpc"
 
-MAX_EPOCHS = 3
+MAX_EPOCHS = 2
 SEED = 42
 
 L.seed_everything(42)
@@ -40,4 +40,9 @@ trainer = L.Trainer(
     logger=False,
 )
 trainer.fit(model, datamodule=dm)
-trainer.validate(model, dm)
+
+print("Validation with validation dataloader...")
+trainer.validate(model, dataloaders=dm.val_dataloader())
+
+print("Validation with datamodule...")
+trainer.validate(model, datamodule=dm)
