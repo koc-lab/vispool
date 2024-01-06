@@ -5,7 +5,7 @@ import lightning as L
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from vispool import glue_loader_columns, glue_tasks_num_labels, glue_tasks_text_fields
+from vispool import GLUE_LOADER_COLUMNS, GLUE_NUM_LABELS, GLUE_TEXT_FIELDS
 
 
 class GLUEDataModule(L.LightningDataModule):
@@ -25,8 +25,8 @@ class GLUEDataModule(L.LightningDataModule):
         self.train_batch_size = train_batch_size
         self.eval_batch_size = eval_batch_size
 
-        self.text_fields = glue_tasks_text_fields[task_name]
-        self.num_labels = glue_tasks_num_labels[task_name]
+        self.text_fields = GLUE_TEXT_FIELDS[task_name]
+        self.num_labels = GLUE_NUM_LABELS[task_name]
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
 
     @property
@@ -44,7 +44,7 @@ class GLUEDataModule(L.LightningDataModule):
                 batched=True,
                 # remove_columns=["label"],
             )
-            self.columns = [c for c in self.dataset[split].column_names if c in glue_loader_columns]
+            self.columns = [c for c in self.dataset[split].column_names if c in GLUE_LOADER_COLUMNS]
             self.dataset[split].set_format(type="torch", columns=self.columns)
 
         self.eval_splits = [x for x in self.dataset.keys() if "validation" in x]
