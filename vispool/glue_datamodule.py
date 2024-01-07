@@ -60,9 +60,7 @@ class GLUEDataModule(L.LightningDataModule):
 
     def val_dataloader(self) -> DataLoader | list[DataLoader]:
         if len(self.eval_splits) == 1:
-            return DataLoader(
-                self.dataset["validation"], batch_size=self.eval_batch_size, num_workers=4
-            )
+            return DataLoader(self.dataset["validation"], batch_size=self.eval_batch_size, num_workers=4)
         elif len(self.eval_splits) > 1:
             return [
                 DataLoader(self.dataset[x], batch_size=self.eval_batch_size, num_workers=4)

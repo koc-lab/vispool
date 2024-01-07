@@ -44,9 +44,7 @@ class GLUETransformer(L.LightningModule):
 
     def forward(self, **inputs: Any) -> Any:
         target_key = "token_type_ids"
-        if target_key in inputs.keys() and (
-            inputs[target_key] is None or not inputs["token_type_ids"].any()
-        ):
+        if target_key in inputs.keys() and (inputs[target_key] is None or not inputs["token_type_ids"].any()):
             return self.model(**{k: v for k, v in inputs.items() if k != target_key})
         return self.model(**inputs)
 
@@ -105,15 +103,11 @@ class GLUETransformer(L.LightningModule):
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [
-                    p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)
-                ],
+                "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
                 "weight_decay": self.hparams["weight_decay"],
             },
             {
-                "params": [
-                    p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)
-                ],
+                "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
         ]

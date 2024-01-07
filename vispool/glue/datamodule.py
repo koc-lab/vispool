@@ -61,13 +61,8 @@ class GLUEDataModule(L.LightningDataModule):
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
         self.dataset_dict = get_glue_task_dataset(self.task_name)
         for split in self.dataset_dict.keys():
-            self.dataset_dict[split] = self.dataset_dict[split].map(
-                self.encode,
-                batched=True,
-            )
-            self.columns = [
-                c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS
-            ]
+            self.dataset_dict[split] = self.dataset_dict[split].map(self.encode, batched=True)
+            self.columns = [c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS]
             self.dataset_dict[split].set_format(type="torch", columns=self.columns)
 
         self.dataset_dict.set_format(
