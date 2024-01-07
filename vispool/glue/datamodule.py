@@ -1,5 +1,5 @@
 from os import PathLike
-from typing import Any
+from typing import Any, Mapping
 
 import lightning as L
 from datasets import DatasetDict, load_dataset
@@ -10,6 +10,8 @@ from vispool import GLUE_LOADER_COLUMNS, GLUE_NUM_LABELS, GLUE_TASKS, GLUE_TEXT_
 
 
 def get_glue_task_dataset(task_name: str) -> DatasetDict:
+    if task_name not in GLUE_TASKS:
+        raise ValueError(f"Task name {task_name} not in {GLUE_TASKS}")
     adjusted_task_name = "mnli" if task_name == "mnli-mm" else task_name
     dataset_dict = load_dataset("glue", adjusted_task_name, trust_remote_code=True)
     if type(dataset_dict) is not DatasetDict:
@@ -68,15 +70,18 @@ class GLUEDataModule(L.LightningDataModule):
             self.columns = [c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS]
             self.dataset_dict[split].set_format(type="torch", columns=self.columns)
 
-        self.dataset_dict.set_format(
-            type="torch", columns=["input_ids", "token_type_ids", "attention_mask", "label"]
-        )
+    def encode(self, batch: Mapping[str, list]) -> Any:
+        if len(self.text_fields) > 1:
+            texts = list(zip(*[batch[field] for field in self.text_fields]))
+        else:
+            texts = batch[self.text_fields[0]]
 
-    def encode(self, batch: Any) -> Any:
-        return batch
-        # return self.tokenizer(
-        #     examples["sentence1"],
-        #     examples["sentence2"],
-        #     padding="max_length",
-        #     truncation=True,
-        # )
+        tokenized = self.tokenizer(
+            texts,
+            max_length=self.max_seq_length,
+            padding="max_length",
+            truncation=True,
+        )
+        if "label" in batch.keys():
+            tokenized["labels"] = batch["label"]
+        return tokenized
