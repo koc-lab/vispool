@@ -4,6 +4,7 @@ from typing import Any
 import lightning as L
 from datasets import DatasetDict, load_dataset
 from transformers import AutoTokenizer
+from typing_extensions import override
 
 from vispool import GLUE_LOADER_COLUMNS, GLUE_NUM_LABELS, GLUE_TASKS, GLUE_TEXT_FIELDS
 
@@ -53,10 +54,12 @@ class GLUEDataModule(L.LightningDataModule):
         self.text_fields = GLUE_TEXT_FIELDS[task_name]
         self.num_labels = GLUE_NUM_LABELS[task_name]
 
+    @override
     def prepare_data(self) -> None:
         get_glue_task_dataset(self.task_name)
         AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
 
+    @override
     def setup(self, stage: str) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
         self.dataset_dict = get_glue_task_dataset(self.task_name)
