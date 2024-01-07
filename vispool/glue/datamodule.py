@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 import lightning as L
 from datasets import DatasetDict, load_dataset
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from typing_extensions import override
 
@@ -69,6 +70,16 @@ class GLUEDataModule(L.LightningDataModule):
             self.dataset_dict[split] = self.dataset_dict[split].map(self.encode, batched=True)
             self.columns = [c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS]
             self.dataset_dict[split].set_format(type="torch", columns=self.columns)
+
+    @override
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(self.dataset_dict["train"], batch_size=self.batch_size, shuffle=True)  # type: ignore
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.dataset_dict["validation"], batch_size=self.batch_size)  # type: ignore
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(self.dataset_dict["test"], batch_size=self.batch_size)  # type: ignore
 
     def encode(self, batch: Mapping[str, list]) -> Any:
         if len(self.text_fields) > 1:
