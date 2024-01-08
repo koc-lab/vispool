@@ -50,21 +50,24 @@ class GLUETransformer(L.LightningModule):
 
     def training_step(self, batch: Mapping, batch_idx: int) -> dict:
         # inputs = batch if self.use_token_type_ids else {k: v for k, v in batch.items() if k != "token_type_ids"}
-        inputs = batch
-        outputs = self(**inputs)
-        return {"loss": outputs["loss"]}
+        step_result = self._common_step(batch, batch_idx)
+        self.log_dict({f"train_{k}": v for k, v in step_result.items()}, prog_bar=True)
+        return {"loss": step_result["loss"]}
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
-        outputs = self(**batch)
-        val_loss, logits = outputs["loss"], outputs["logits"]
-        preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
-        labels = batch["labels"]
-        metric_dict = self.metric.compute(predictions=preds, references=labels)
-        log_dict = {"val_loss": val_loss} if metric_dict is None else {"val_loss": val_loss, **metric_dict}
-        self.log_dict(log_dict, prog_bar=True)
+        step_result = self._common_step(batch, batch_idx)
+        self.log_dict({f"val_{k}": v for k, v in step_result.items()}, prog_bar=True)
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
-        self.validation_step(batch, batch_idx)
+        step_result = self._common_step(batch, batch_idx)
+        self.log_dict({f"test_{k}": v for k, v in step_result.items()}, prog_bar=True)
+
+    def _common_step(self, batch: Mapping, batch_idx: int) -> dict:
+        outputs = self(**batch)
+        loss, logits = outputs["loss"], outputs["logits"]
+        preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
+        metric_dict = self.metric.compute(predictions=preds, references=batch["labels"])
+        return {"loss": loss} if metric_dict is None else {"loss": loss, **metric_dict}
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
         optimizer = AdamW(self.parameters(), lr=self.learning_rate, eps=self.adam_epsilon)
