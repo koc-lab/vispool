@@ -73,13 +73,26 @@ class GLUEDataModule(L.LightningDataModule):
 
     @override
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(self.dataset_dict["train"], batch_size=self.batch_size, shuffle=True)  # type: ignore
+        return DataLoader(
+            self.dataset_dict["train"],  # type: ignore
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            shuffle=True,
+        )
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(self.dataset_dict["validation"], batch_size=self.batch_size)  # type: ignore
+        return DataLoader(
+            self.dataset_dict["validation"],  # type: ignore
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(self.dataset_dict["test"], batch_size=self.batch_size)  # type: ignore
+        return DataLoader(
+            self.dataset_dict["test"],  # type: ignore
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+        )
 
     def encode(self, batch: Mapping[str, list]) -> Any:
         if len(self.text_fields) > 1:
