@@ -54,17 +54,14 @@ class GLUEDataModule(L.LightningDataModule):
         AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.dataset["train"], batch_size=self.train_batch_size, shuffle=True, num_workers=4
-        )
+        return DataLoader(self.dataset["train"], batch_size=self.train_batch_size, shuffle=True, num_workers=4)
 
     def val_dataloader(self) -> DataLoader | list[DataLoader]:
         if len(self.eval_splits) == 1:
             return DataLoader(self.dataset["validation"], batch_size=self.eval_batch_size, num_workers=4)
         elif len(self.eval_splits) > 1:
             return [
-                DataLoader(self.dataset[x], batch_size=self.eval_batch_size, num_workers=4)
-                for x in self.eval_splits
+                DataLoader(self.dataset[x], batch_size=self.eval_batch_size, num_workers=4) for x in self.eval_splits
             ]
         else:
             raise ValueError("No validation splits found")
@@ -74,8 +71,7 @@ class GLUEDataModule(L.LightningDataModule):
             return DataLoader(self.dataset["test"], batch_size=self.eval_batch_size, num_workers=4)
         elif len(self.eval_splits) > 1:
             return [
-                DataLoader(self.dataset[x], batch_size=self.eval_batch_size, num_workers=4)
-                for x in self.eval_splits
+                DataLoader(self.dataset[x], batch_size=self.eval_batch_size, num_workers=4) for x in self.eval_splits
             ]
         else:
             raise ValueError("No validation splits found")

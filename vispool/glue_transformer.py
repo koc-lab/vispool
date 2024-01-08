@@ -32,9 +32,7 @@ class GLUETransformer(L.LightningModule):
         self.save_hyperparameters()
 
         self.config = AutoConfig.from_pretrained(model_name_or_path, num_labels=num_labels)
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_name_or_path, config=self.config
-        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, config=self.config)
         self.metric = evaluate.load(
             "glue",
             self.hparams["task_name"],
