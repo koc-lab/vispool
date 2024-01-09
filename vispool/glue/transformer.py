@@ -52,7 +52,7 @@ class GLUETransformer(L.LightningModule):
         # inputs = batch if self.use_token_type_ids else {k: v for k, v in batch.items() if k != "token_type_ids"}
         inputs = batch
         loss = self(**inputs)[0]
-        self.log("train_batch_loss", loss, prog_bar=True)
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return {"loss": loss}
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
