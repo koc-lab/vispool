@@ -42,4 +42,3 @@ trainer = L.Trainer(
 
 trainer.fit(model, datamodule=dm)
 trainer.validate(model, datamodule=dm)
-trainer.test(model, datamodule=dm)
