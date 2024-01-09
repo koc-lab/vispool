@@ -3,10 +3,12 @@ import os
 import lightning as L
 from datasets.utils.logging import disable_progress_bar
 from lightning.pytorch.loggers import CSVLogger
+from transformers import logging as transformers_logging
 
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 
+transformers_logging.set_verbosity_error()
 disable_progress_bar()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 L.seed_everything(42)
