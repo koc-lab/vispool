@@ -2,12 +2,14 @@ from os import PathLike
 from typing import Any, Mapping
 
 import lightning as L
-from datasets import DatasetDict, load_dataset
+from datasets import DatasetDict, disable_caching, load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 from typing_extensions import override
 
 from vispool import GLUE_LOADER_COLUMNS, GLUE_NUM_LABELS, GLUE_TASKS, GLUE_TEXT_FIELDS
+
+disable_caching()
 
 
 def get_glue_task_dataset(task_name: str) -> DatasetDict:
