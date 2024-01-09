@@ -66,12 +66,21 @@ class GLUEDataModule(L.LightningDataModule):
 
     @override
     def setup(self, stage: str) -> None:
+        target_splits: set[str] = set()
+        if stage == "fit":
+            target_splits = {"train", "validation"}
+        elif stage == "validate":
+            target_splits = {"validation"}
+        else:
+            target_splits = {"test"}
+
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name_or_path, use_fast=True)
         self.dataset_dict = get_glue_task_dataset(self.task_name)
         for split in self.dataset_dict.keys():
-            self.dataset_dict[split] = self.dataset_dict[split].map(self.encode, batched=True)
-            self.columns = [c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS]
-            self.dataset_dict[split].set_format(type="torch", columns=self.columns)
+            if split in target_splits:
+                self.dataset_dict[split] = self.dataset_dict[split].map(self.encode, batched=True)
+                self.columns = [c for c in self.dataset_dict[split].column_names if c in GLUE_LOADER_COLUMNS]
+                self.dataset_dict[split].set_format(type="torch", columns=self.columns)
 
     @override
     def train_dataloader(self) -> DataLoader:
