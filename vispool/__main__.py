@@ -2,6 +2,7 @@ import os
 
 import lightning as L
 from datasets.utils.logging import disable_progress_bar
+from lightning.pytorch.loggers import CSVLogger
 
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
@@ -28,10 +29,12 @@ model = GLUETransformer(
     batch_size=32,
 )
 
+logger = CSVLogger("logs", name="my_exp_name")
 trainer = L.Trainer(
     accelerator="auto",
     devices="auto",
     max_epochs=1,
+    logger=logger,
     deterministic=True,
 )
 
