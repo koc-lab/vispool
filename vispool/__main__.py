@@ -13,8 +13,8 @@ disable_progress_bar()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 L.seed_everything(42)
 
-# MODEL_CHECKPOINT = "distilbert-base-uncased"
-MODEL_CHECKPOINT = "bert-base-uncased"
+MODEL_CHECKPOINT = "distilbert-base-uncased"
+# MODEL_CHECKPOINT = "bert-base-uncased"
 TASK_NAME = "mrpc"
 # TASK_NAME = "cola"
 
@@ -35,7 +35,7 @@ logger = CSVLogger("logs", name="my_exp_name")
 trainer = L.Trainer(
     accelerator="auto",
     devices="auto",
-    max_epochs=1,
+    max_epochs=3,
     logger=logger,
     deterministic=True,
 )
