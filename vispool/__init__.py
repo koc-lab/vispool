@@ -7,16 +7,16 @@ WANDB_LOG_DIR.mkdir(exist_ok=True)
 __version__ = "0.1.0"
 
 GLUE_TASKS = (
-    "cola",
-    "mnli",
-    "mnli-mm",
+    "wnli",
+    "rte",
     "mrpc",
+    "stsb",
+    "cola",
+    "sst2",
     "qnli",
     "qqp",
-    "rte",
-    "sst2",
-    "stsb",
-    "wnli",
+    "mnli",
+    "mnli-mm",
 )
 
 GLUE_OUTPUT_MODES = {
