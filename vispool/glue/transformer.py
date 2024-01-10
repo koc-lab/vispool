@@ -28,14 +28,12 @@ class GLUETransformer(L.LightningModule):
         model_name_or_path: str | PathLike[str],
         task_name: str,
         learning_rate: float = 1e-5,
-        adam_epsilon: float = 1e-8,
     ) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.model_name_or_path = model_name_or_path
         self.task_name = task_name
         self.learning_rate = learning_rate
-        self.adam_epsilon = adam_epsilon
 
         self.num_labels = GLUE_NUM_LABELS[task_name]
         self.config = AutoConfig.from_pretrained(model_name_or_path, num_labels=self.num_labels)
@@ -66,5 +64,5 @@ class GLUETransformer(L.LightningModule):
         self.validation_step(batch, batch_idx)
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
-        optimizer = AdamW(self.parameters(), lr=self.learning_rate, eps=self.adam_epsilon)
+        optimizer = AdamW(self.parameters(), lr=self.learning_rate)
         return optimizer
