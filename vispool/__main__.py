@@ -1,5 +1,3 @@
-import os
-
 import lightning as L
 import wandb
 from datasets.utils.logging import disable_progress_bar
@@ -13,7 +11,6 @@ from vispool.glue.transformer import GLUETransformer
 load_dotenv()
 transformers_logging.set_verbosity_error()
 disable_progress_bar()
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 L.seed_everything(42)
 
 MODEL_CHECKPOINT = "distilbert-base-uncased"
