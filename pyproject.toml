@@ -13,6 +13,8 @@ torch = "^2.1.2"
 transformers = { extras = ["sentencepiece"], version = "^4.36.2" }
 vector-vis-graph = { git = "https://github.com/tunakasif/vector-vis-graph.git" }
 scikit-learn = "^1.3.2"
+wandb = "^0.16.2"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.4"

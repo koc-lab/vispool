@@ -2,12 +2,15 @@ import os
 
 import lightning as L
 from datasets.utils.logging import disable_progress_bar
-from lightning.pytorch.loggers import CSVLogger
+from dotenv import load_dotenv
+from pytorch_lightning.loggers import WandbLogger
 from transformers import logging as transformers_logging
 
+import wandb
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 
+load_dotenv()
 transformers_logging.set_verbosity_error()
 disable_progress_bar()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -31,14 +34,15 @@ model = GLUETransformer(
     batch_size=32,
 )
 
-logger = CSVLogger("logs", name="my_exp_name")
+logger = WandbLogger(project="vispool")
 trainer = L.Trainer(
     accelerator="auto",
     devices="auto",
     max_epochs=3,
-    logger=logger,
+    logger=logger,  # type: ignore
     deterministic=True,
 )
 
 trainer.fit(model, datamodule=dm)
 trainer.validate(model, datamodule=dm)
+wandb.finish()
