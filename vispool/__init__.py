@@ -67,3 +67,16 @@ GLUE_LOADER_COLUMNS = [
     "end_positions",
     "labels",
 ]
+
+GLUE_TARGET_METRICS = {
+    "cola": "matthews_correlation",
+    "mnli": "accuracy",
+    "mnli-mm": "accuracy",
+    "mrpc": "f1",
+    "qnli": "accuracy",
+    "qqp": "f1",
+    "rte": "accuracy",
+    "sst2": "accuracy",
+    "stsb": "pearson",
+    "wnli": "accuracy",
+}
