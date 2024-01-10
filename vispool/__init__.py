@@ -1,3 +1,9 @@
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent.parent.absolute()
+WANDB_LOG_DIR = ROOT_DIR.joinpath("wandb_logs")
+WANDB_LOG_DIR.mkdir(exist_ok=True)
+
 __version__ = "0.1.0"
 
 GLUE_TASKS = (

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pytorch_lightning.loggers import WandbLogger
 from transformers import logging as transformers_logging
 
+from vispool import WANDB_LOG_DIR
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 
@@ -30,7 +31,7 @@ model = GLUETransformer(
     task_name=TASK_NAME,
 )
 
-logger = WandbLogger(project="vispool")
+logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR)
 trainer = L.Trainer(
     accelerator="auto",
     devices="auto",
