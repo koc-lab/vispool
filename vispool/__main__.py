@@ -1,12 +1,12 @@
 import os
 
 import lightning as L
+import wandb
 from datasets.utils.logging import disable_progress_bar
 from dotenv import load_dotenv
 from pytorch_lightning.loggers import WandbLogger
 from transformers import logging as transformers_logging
 
-import wandb
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 
