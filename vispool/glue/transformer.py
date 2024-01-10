@@ -29,13 +29,11 @@ class GLUETransformer(L.LightningModule):
         task_name: str,
         learning_rate: float = 1e-5,
         adam_epsilon: float = 1e-8,
-        batch_size: int = 32,
     ) -> None:
         super().__init__()
         self.save_hyperparameters()
         self.model_name_or_path = model_name_or_path
         self.task_name = task_name
-        self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.adam_epsilon = adam_epsilon
 

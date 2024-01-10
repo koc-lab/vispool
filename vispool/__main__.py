@@ -31,7 +31,6 @@ dm = GLUEDataModule(
 model = GLUETransformer(
     MODEL_CHECKPOINT,
     task_name=TASK_NAME,
-    batch_size=32,
 )
 
 logger = WandbLogger(project="vispool")
