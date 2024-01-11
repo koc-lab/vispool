@@ -58,8 +58,6 @@ class GLUETransformer(L.LightningModule):
         log_dict = {"val_loss": val_loss} if metric_dict is None else {"val_loss": val_loss, **metric_dict}
         self.log_dict(log_dict, prog_bar=True)
 
-    def test_step(self, batch: dict, batch_idx: int) -> None:
-        self.validation_step(batch, batch_idx)
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
