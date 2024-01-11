@@ -28,9 +28,11 @@ class GLUETransformer(L.LightningModule):
         model_name_or_path: str | PathLike[str],
         task_name: str,
         learning_rate: float = 1e-5,
+        parameter_search: bool = False,
     ) -> None:
         super().__init__()
-        self.save_hyperparameters()
+        if not parameter_search:
+            self.save_hyperparameters()
         self.model_name_or_path = model_name_or_path
         self.task_name = task_name
         self.learning_rate = learning_rate

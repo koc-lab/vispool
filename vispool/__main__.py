@@ -40,6 +40,7 @@ def train() -> None:
         MODEL_CHECKPOINT,
         task_name=TASK_NAME,
         learning_rate=learning_rate,
+        parameter_search=True,
     )
     trainer = L.Trainer(
         accelerator="auto",
