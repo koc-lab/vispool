@@ -2,10 +2,11 @@ import lightning as L
 import wandb
 from datasets.utils.logging import disable_progress_bar
 from dotenv import load_dotenv
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from lightning.pytorch.loggers import WandbLogger
 from transformers import logging as transformers_logging
 
-from vispool import GLUE_TASKS, WANDB_LOG_DIR
+from vispool import GLUE_TARGET_METRICS, GLUE_TASKS, WANDB_LOG_DIR
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 
@@ -14,29 +15,56 @@ transformers_logging.set_verbosity_error()
 disable_progress_bar()
 
 MODEL_CHECKPOINT = "distilbert-base-uncased"
-for task_name in GLUE_TASKS:
+TASK_NAME = GLUE_TASKS[1]
+MONITOR_METRIC = f"val/{GLUE_TARGET_METRICS[TASK_NAME]}"
+
+
+def train() -> None:
+    # Setup
+    checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
+    early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=3)
+    wandb.init()
+    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR)
+    batch_size = wandb.config.batch_size
+    learning_rate = wandb.config.learning_rate
+
+    # Train
     L.seed_everything(42)
     dm = GLUEDataModule(
         MODEL_CHECKPOINT,
-        task_name=task_name,
-        batch_size=32,
+        task_name=TASK_NAME,
+        batch_size=batch_size,
         num_workers=8,
     )
-
     model = GLUETransformer(
         MODEL_CHECKPOINT,
-        task_name=task_name,
+        task_name=TASK_NAME,
+        learning_rate=learning_rate,
     )
-
-    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR)
     trainer = L.Trainer(
         accelerator="auto",
-        devices="auto",
-        max_epochs=2,
+        devices=1,
+        max_epochs=3,
         logger=logger,  # type: ignore
+        callbacks=[checkpoint_callback, early_stopping_callback],
         deterministic=True,
     )
-
     trainer.fit(model, datamodule=dm)
     trainer.validate(model, datamodule=dm)
-    wandb.finish()
+
+
+sweep_configuration = {
+    "method": "grid",
+    "metric": {
+        "goal": "maximize",
+        "name": MONITOR_METRIC,
+    },
+    "parameters": {
+        "batch_size": {"values": [32, 64]},
+        "learning_rate": {"values": [2e-5, 3e-5, 4e-5, 5e-5]},
+    },
+}
+
+
+sweep_id = wandb.sweep(sweep=sweep_configuration, project="vispool")
+wandb.agent(sweep_id, function=train)
