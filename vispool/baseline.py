@@ -1,3 +1,6 @@
+from os import getenv
+from typing import Optional
+
 import lightning as L
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
@@ -12,7 +15,20 @@ TASK_NAME = None
 MONITOR_METRIC = None
 
 
-def baseline_agent(sweep_id: str) -> None:
+def baseline_agent(sweep_id: str, entity: Optional[str] = None, project: Optional[str] = None) -> None:
+    global MODEL_CHECKPOINT, TASK_NAME, MONITOR_METRIC
+
+    if entity is None:
+        entity = getenv("WANDB_ENTITY")
+    if project is None:
+        project = getenv("WANDB_PROJECT")
+    if entity is None or project is None:
+        raise ValueError("Must specify entity and project.")
+
+    tuner = wandb.controller(sweep_id, entity=entity, project=project)
+    MODEL_CHECKPOINT = tuner.sweep_config.get("model_checkpoint")
+    TASK_NAME = tuner.sweep_config.get("task_name")
+    MONITOR_METRIC = tuner.sweep_config.get("monitor_metric")
     wandb.agent(sweep_id, function=train_baseline)
 
 
@@ -23,6 +39,10 @@ def baseline_sweep(model_checkpoint: str, task_name: str) -> str:
     MONITOR_METRIC = f"val/{GLUE_TARGET_METRICS[TASK_NAME]}"
 
     sweep_configuration = {
+        "name": f"baseline:{MODEL_CHECKPOINT}:{TASK_NAME}",
+        "model_checkpoint": MODEL_CHECKPOINT,
+        "task_name": TASK_NAME,
+        "monitor_metric": MONITOR_METRIC,
         "method": "grid",
         "metric": {
             "goal": "maximize",
@@ -48,7 +68,7 @@ def train_baseline() -> None:
     # Setup
     checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
     early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=3)
-    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR, tags=["baseline", TASK_NAME])
+    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR, tags=["baseline", MODEL_CHECKPOINT, TASK_NAME])
 
     seed = logger.experiment.config.get("seed", 42)
     batch_size = logger.experiment.config.get("batch_size", 32)
