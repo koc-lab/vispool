@@ -28,9 +28,9 @@ def baseline_agent(sweep_id: str, entity: Optional[str] = None, project: Optiona
     tuner = wandb.controller(sweep_id, entity=entity, project=project)
     parameters = tuner.sweep_config.get("parameters")
     if parameters is not None:
-        MODEL_CHECKPOINT = parameters.get("model_checkpoint")
-        TASK_NAME = parameters.get("task_name")
-        MONITOR_METRIC = parameters.get("monitor_metric")
+        MODEL_CHECKPOINT = parameters.get("model_checkpoint")["value"]
+        TASK_NAME = parameters.get("task_name")["value"]
+        MONITOR_METRIC = parameters.get("monitor_metric")["value"]
     wandb.agent(sweep_id, function=train_baseline)
 
 
