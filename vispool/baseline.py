@@ -55,7 +55,7 @@ def baseline_sweep(model_checkpoint: str, task_name: str) -> str:
             "max_epochs": {"value": 10},
             "patience": {"value": 3},
             "batch_size": {"value": 32},
-            "max_seq_length": {"values": [128, 256]},
+            "max_seq_length": {"value": 128},
             "learning_rate": {"values": [2e-5, 3e-5, 4e-5, 5e-5]},
             "seed": {"values": [40, 41, 42, 43, 44]},
         },
