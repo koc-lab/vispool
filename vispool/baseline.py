@@ -26,9 +26,11 @@ def baseline_agent(sweep_id: str, entity: Optional[str] = None, project: Optiona
         raise ValueError("Must specify entity and project.")
 
     tuner = wandb.controller(sweep_id, entity=entity, project=project)
-    MODEL_CHECKPOINT = tuner.sweep_config.get("model_checkpoint")
-    TASK_NAME = tuner.sweep_config.get("task_name")
-    MONITOR_METRIC = tuner.sweep_config.get("monitor_metric")
+    parameters = tuner.sweep_config.get("parameters")
+    if parameters is not None:
+        MODEL_CHECKPOINT = parameters.get("model_checkpoint")
+        TASK_NAME = parameters.get("task_name")
+        MONITOR_METRIC = parameters.get("monitor_metric")
     wandb.agent(sweep_id, function=train_baseline)
 
 
@@ -40,15 +42,15 @@ def baseline_sweep(model_checkpoint: str, task_name: str) -> str:
 
     sweep_configuration = {
         "name": f"baseline:{MODEL_CHECKPOINT}:{TASK_NAME}",
-        "model_checkpoint": MODEL_CHECKPOINT,
-        "task_name": TASK_NAME,
-        "monitor_metric": MONITOR_METRIC,
         "method": "grid",
         "metric": {
             "goal": "maximize",
             "name": MONITOR_METRIC,
         },
         "parameters": {
+            "model_checkpoint": {"value": MODEL_CHECKPOINT},
+            "task_name": {"value": TASK_NAME},
+            "monitor_metric": {"value": MONITOR_METRIC},
             "num_workers": {"value": 8},
             "max_epochs": {"value": 10},
             "batch_size": {"value": 32},
