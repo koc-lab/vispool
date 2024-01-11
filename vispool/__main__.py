@@ -23,7 +23,7 @@ def train() -> None:
     # Setup
     checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
     early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=3)
-    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR)
+    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR, tags=["baseline", TASK_NAME])
     batch_size = logger.experiment.config.batch_size
     learning_rate = logger.experiment.config.learning_rate
 
