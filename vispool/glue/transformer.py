@@ -54,10 +54,13 @@ class GLUETransformer(L.LightningModule):
         val_loss, logits = outputs["loss"], outputs["logits"]
         preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
         labels = batch["labels"]
-        metric_dict = self.metric.compute(predictions=preds, references=labels)
-        log_dict = {"val_loss": val_loss} if metric_dict is None else {"val_loss": val_loss, **metric_dict}
-        self.log_dict(log_dict, prog_bar=True)
 
+        self.log("val/loss", val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        metric_dict = self.metric.compute(predictions=preds, references=labels)
+        if metric_dict is not None:
+            log_dict = {"loss": val_loss} if metric_dict is None else {"loss": val_loss, **metric_dict}
+            log_dict = {f"val/{k}": v for k, v in metric_dict.items()}
+            self.log_dict(log_dict, prog_bar=True)
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
         optimizer = AdamW(self.parameters(), lr=self.learning_rate)
