@@ -53,6 +53,7 @@ def baseline_sweep(model_checkpoint: str, task_name: str) -> str:
             "monitor_metric": {"value": MONITOR_METRIC},
             "num_workers": {"value": 8},
             "max_epochs": {"value": 10},
+            "patience": {"value": 3},
             "batch_size": {"value": 32},
             "max_seq_length": {"values": [128, 256]},
             "learning_rate": {"values": [2e-5, 3e-5, 4e-5, 5e-5]},
@@ -68,16 +69,18 @@ def train_baseline() -> None:
         raise ValueError("Must run `baseline_sweep`.")
 
     # Setup
-    checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
-    early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=3)
     logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR, tags=["baseline", MODEL_CHECKPOINT, TASK_NAME])
-
     seed = logger.experiment.config.get("seed", 42)
     batch_size = logger.experiment.config.get("batch_size", 32)
     max_seq_length = logger.experiment.config.get("max_seq_length", 128)
     num_workers = logger.experiment.config.get("num_workers", 4)
     learning_rate = logger.experiment.config.get("learning_rate", 2e-5)
     max_epochs = logger.experiment.config.get("max_epochs", 3)
+    patience = logger.experiment.config.get("patience", 3)
+
+    # Callbacks
+    checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
+    early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=patience)
 
     # Train
     L.seed_everything(seed)
