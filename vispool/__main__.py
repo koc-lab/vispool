@@ -1,6 +1,7 @@
 import click
 from datasets.utils.logging import disable_progress_bar
 from dotenv import load_dotenv
+from torch import set_float32_matmul_precision
 from transformers import logging as transformers_logging
 
 from vispool.baseline import baseline_agent as base_agent
@@ -9,6 +10,7 @@ from vispool.baseline import baseline_sweep as base_sweep
 load_dotenv()
 transformers_logging.set_verbosity_error()
 disable_progress_bar()
+set_float32_matmul_precision("high")
 
 
 @click.group()
