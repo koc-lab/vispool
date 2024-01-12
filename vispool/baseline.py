@@ -1,4 +1,4 @@
-from os import getenv
+from os import cpu_count, getenv
 from typing import Optional
 
 import lightning as L
@@ -51,7 +51,6 @@ def baseline_sweep(model_checkpoint: str, task_name: str) -> str:
             "model_checkpoint": {"value": MODEL_CHECKPOINT},
             "task_name": {"value": TASK_NAME},
             "monitor_metric": {"value": MONITOR_METRIC},
-            "num_workers": {"value": 8},
             "max_epochs": {"value": 10},
             "patience": {"value": 3},
             "batch_size": {"value": 32},
@@ -78,7 +77,6 @@ def train_baseline() -> None:
     seed = logger.experiment.config.get("seed", 42)
     batch_size = logger.experiment.config.get("batch_size", 32)
     max_seq_length = logger.experiment.config.get("max_seq_length", 128)
-    num_workers = logger.experiment.config.get("num_workers", 4)
     learning_rate = logger.experiment.config.get("learning_rate", 2e-5)
     max_epochs = logger.experiment.config.get("max_epochs", 3)
     patience = logger.experiment.config.get("patience", 3)
@@ -89,6 +87,8 @@ def train_baseline() -> None:
 
     # Train
     L.seed_everything(seed)
+    num_workers = cpu_count()
+    num_workers = num_workers if num_workers is not None else 0
     dm = GLUEDataModule(
         MODEL_CHECKPOINT,
         task_name=TASK_NAME,
