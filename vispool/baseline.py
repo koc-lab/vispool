@@ -69,7 +69,12 @@ def train_baseline() -> None:
         raise ValueError("Must run `baseline_sweep`.")
 
     # Setup
-    logger = WandbLogger(project="vispool", save_dir=WANDB_LOG_DIR, tags=["baseline", MODEL_CHECKPOINT, TASK_NAME])
+    logger = WandbLogger(
+        project="vispool",
+        save_dir=WANDB_LOG_DIR,
+        tags=["baseline", MODEL_CHECKPOINT, TASK_NAME],
+        resume=True,
+    )
     seed = logger.experiment.config.get("seed", 42)
     batch_size = logger.experiment.config.get("batch_size", 32)
     max_seq_length = logger.experiment.config.get("max_seq_length", 128)
