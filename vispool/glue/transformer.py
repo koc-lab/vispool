@@ -4,6 +4,7 @@ from typing import Any, Mapping
 import lightning as L
 import torch
 from evaluate import EvaluationModule, load
+from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from torch.optim import AdamW
 from transformers import AutoConfig, AutoModelForSequenceClassification, PreTrainedModel
@@ -29,6 +30,7 @@ class GLUETransformer(L.LightningModule):
         task_name: str,
         learning_rate: float = 1e-5,
         parameter_search: bool = False,
+        define_metric: str | None = None,
     ) -> None:
         super().__init__()
         if not parameter_search:
@@ -36,6 +38,7 @@ class GLUETransformer(L.LightningModule):
         self.model_name_or_path = model_name_or_path
         self.task_name = task_name
         self.learning_rate = learning_rate
+        self.define_metric = define_metric
 
         self.num_labels = GLUE_NUM_LABELS[task_name]
         self.config = AutoConfig.from_pretrained(model_name_or_path, num_labels=self.num_labels)
@@ -52,6 +55,8 @@ class GLUETransformer(L.LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch: dict, batch_idx: int) -> None:
+        if self.trainer.global_step == 0 and self.define_metric is not None and isinstance(self.logger, WandbLogger):
+            self.logger.experiment.define_metric(self.define_metric, summary="max")
         outputs = self(**batch)
         val_loss, logits = outputs["loss"], outputs["logits"]
         preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
