@@ -31,24 +31,15 @@ vvg_model = VVGTransformer(
     MODEL_CHECKPOINT,
     task_name=TASK_NAME,
     encoder_lr=1e-5,
-    gcn_lr=1e-3,
+    gcn_lr=1e-4,
 )
 
 logger = CSVLogger(save_dir="logs", name=TASK_NAME)
 
 
-print("Training baseline on:", TASK_NAME)
-trainer = L.Trainer(
-    accelerator="auto",
-    devices=1,
-    max_epochs=1,
-    deterministic=True,
-    logger=logger,
-)
-trainer.fit(base_model, datamodule=dm)
-trainer.validate(base_model, datamodule=dm)
-
 print("Training vvg on:", TASK_NAME)
+SEED = 42
+L.seed_everything(SEED)
 trainer = L.Trainer(
     accelerator="auto",
     devices=1,
@@ -58,3 +49,15 @@ trainer = L.Trainer(
 )
 trainer.fit(vvg_model, datamodule=dm)
 trainer.validate(vvg_model, datamodule=dm)
+
+print("Training baseline on:", TASK_NAME)
+L.seed_everything(SEED)
+trainer = L.Trainer(
+    accelerator="auto",
+    devices=1,
+    max_epochs=1,
+    deterministic=True,
+    logger=logger,
+)
+trainer.fit(base_model, datamodule=dm)
+trainer.validate(base_model, datamodule=dm)
