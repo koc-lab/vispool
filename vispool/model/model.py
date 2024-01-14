@@ -30,17 +30,29 @@ def get_vvgs_parallel(tensor: torch.Tensor) -> torch.Tensor:
 
 
 class GCN(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int, dropout: float = 0.1) -> None:
+    def __init__(self, in_dim: int, out_dim: int, dropout: float = 0.2) -> None:
         super().__init__()
-        self.linear = nn.Linear(in_dim, out_dim)
+        self.ln1 = nn.LayerNorm(in_dim)
+        self.ln2 = nn.LayerNorm(128)
+        self.linear1 = nn.Linear(in_dim, 128)
+        self.linear2 = nn.Linear(128, out_dim)
         self.dropout = nn.Dropout(dropout)
         self.in_dim = in_dim
         self.out_dim = out_dim
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
         cls_tokens = (vvgs @ token_embs)[:, 0, :]
-        out = self.linear(cls_tokens)
+
+        # Layer 1
+        cls_tokens = self.ln1(cls_tokens)
+        out = self.linear1(cls_tokens)
         out = F.relu(out)
+
+        # Layer 2
+        out = self.ln2(out)
+        out = self.linear2(out)
+        out = F.relu(out)
+
         out = self.dropout(out)
         if self.out_dim > 1:
             out = F.log_softmax(out, dim=-1)
