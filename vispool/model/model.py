@@ -40,6 +40,10 @@ class GCN(nn.Module):
         self.in_dim = in_dim
         self.out_dim = out_dim
 
+    def _init_weights(self) -> None:
+        nn.init.kaiming_uniform_(self.linear1.weight)
+        nn.init.kaiming_uniform_(self.linear2.weight)
+
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
         cls_tokens = (vvgs @ token_embs)[:, 0, :]
 
