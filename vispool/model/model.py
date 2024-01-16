@@ -30,12 +30,12 @@ def get_vvgs_parallel(tensor: torch.Tensor) -> torch.Tensor:
 
 
 class GCN(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int, dropout: float = 0.2) -> None:
+    def __init__(self, in_dim: int, out_dim: int, hidden_dim: int = 128, dropout: float = 0.1) -> None:
         super().__init__()
         self.ln1 = nn.LayerNorm(in_dim)
-        self.ln2 = nn.LayerNorm(128)
-        self.linear1 = nn.Linear(in_dim, 128)
-        self.linear2 = nn.Linear(128, out_dim)
+        self.ln2 = nn.LayerNorm(hidden_dim)
+        self.linear1 = nn.Linear(in_dim, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, out_dim)
         self.dropout = nn.Dropout(dropout)
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -45,19 +45,21 @@ class GCN(nn.Module):
         nn.init.kaiming_uniform_(self.linear2.weight)
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
-        cls_tokens = (vvgs @ token_embs)[:, 0, :]
-
         # Layer 1
-        cls_tokens = self.ln1(cls_tokens)
-        out = self.linear1(cls_tokens)
+        out = vvgs @ token_embs
+        out = self.ln1(out)
+        out = self.linear1(out)
         out = F.relu(out)
+        out = self.dropout(out)
 
         # Layer 2
+        out = vvgs @ out
         out = self.ln2(out)
         out = self.linear2(out)
         out = F.relu(out)
-
         out = self.dropout(out)
+
+        out = out[..., 0, :]
         if self.out_dim > 1:
             out = F.log_softmax(out, dim=-1)
         return out
