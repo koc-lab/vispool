@@ -8,12 +8,15 @@ from vispool.model.model import VVGTransformer
 
 load_dotenv()
 
-# TASK_NAME = "stsb"
+SEED = 42
 TASK_NAME = "mrpc"
-
 MODEL_CHECKPOINT = "distilbert-base-uncased"
-# MODEL_CHECKPOINT = "bert-base-uncased"
+POOL = "cls"
 
+logger = CSVLogger(save_dir="logs", name=TASK_NAME)
+
+# Baseline
+L.seed_everything(SEED)
 dm = GLUEDataModule(
     MODEL_CHECKPOINT,
     task_name=TASK_NAME,
@@ -27,31 +30,7 @@ base_model = GLUETransformer(
     learning_rate=1e-5,
 )
 
-vvg_model = VVGTransformer(
-    MODEL_CHECKPOINT,
-    task_name=TASK_NAME,
-    encoder_lr=1e-5,
-    gcn_lr=1e-4,
-)
-
-logger = CSVLogger(save_dir="logs", name=TASK_NAME)
-
-
-print("Training vvg on:", TASK_NAME)
-SEED = 42
-L.seed_everything(SEED)
-trainer = L.Trainer(
-    accelerator="auto",
-    devices=1,
-    max_epochs=1,
-    deterministic=True,
-    logger=logger,
-)
-trainer.fit(vvg_model, datamodule=dm)
-trainer.validate(vvg_model, datamodule=dm)
-
 print("Training baseline on:", TASK_NAME)
-L.seed_everything(SEED)
 trainer = L.Trainer(
     accelerator="auto",
     devices=1,
@@ -60,4 +39,30 @@ trainer = L.Trainer(
     logger=logger,
 )
 trainer.fit(base_model, datamodule=dm)
-trainer.validate(base_model, datamodule=dm)
+
+# Model
+L.seed_everything(SEED)
+dm = GLUEDataModule(
+    MODEL_CHECKPOINT,
+    task_name=TASK_NAME,
+    batch_size=32,
+    num_workers=4,
+)
+
+vvg_model = VVGTransformer(
+    MODEL_CHECKPOINT,
+    task_name=TASK_NAME,
+    encoder_lr=1e-5,
+    gcn_lr=1e-4,
+    pool=POOL,
+)
+
+print("Training vvg on:", TASK_NAME)
+trainer = L.Trainer(
+    accelerator="auto",
+    devices=1,
+    max_epochs=1,
+    deterministic=True,
+    logger=logger,
+)
+trainer.fit(vvg_model, datamodule=dm)
