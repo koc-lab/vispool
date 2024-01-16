@@ -30,36 +30,55 @@ def get_vvgs_parallel(tensor: torch.Tensor) -> torch.Tensor:
 
 
 class GCN(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int, hidden_dim: int = 128, dropout: float = 0.1) -> None:
+    def __init__(self, in_dim: int, out_dim: int, dropout: float = 0.1) -> None:
         super().__init__()
-        self.ln1 = nn.LayerNorm(in_dim)
-        self.ln2 = nn.LayerNorm(hidden_dim)
-        self.linear1 = nn.Linear(in_dim, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, out_dim)
-        self.dropout = nn.Dropout(dropout)
+        self.layer_norm = nn.LayerNorm(in_dim)
+        self.linear = nn.Linear(in_dim, out_dim)
         self.in_dim = in_dim
         self.out_dim = out_dim
 
     def _init_weights(self) -> None:
-        nn.init.kaiming_uniform_(self.linear1.weight)
-        nn.init.kaiming_uniform_(self.linear2.weight)
+        nn.init.kaiming_uniform_(self.linear.weight)
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
-        # Layer 1
         out = vvgs @ token_embs
-        out = self.ln1(out)
-        out = self.linear1(out)
+        out = self.layer_norm(out)
+        out = self.linear(out)
         out = F.relu(out)
+        return out
+
+
+class OverallGCN(nn.Module):
+    def __init__(
+        self,
+        in_dim: int,
+        out_dim: int,
+        hidden_dim: int = 128,
+        dropout: float = 0.1,
+        pool: str = "cls",
+    ) -> None:
+        super().__init__()
+        self.in_dim = in_dim
+        self.hidden_dim = hidden_dim
+        self.out_dim = out_dim
+        self.dropout = nn.Dropout(dropout)
+        self.gcn1 = GCN(in_dim, hidden_dim, dropout)
+        self.gcn2 = GCN(hidden_dim, out_dim, dropout)
+        self.pool = pool
+
+    def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
+        out = self.gcn1(vvgs, token_embs)
+        out = self.dropout(out)
+        out = self.gcn2(vvgs, out)
         out = self.dropout(out)
 
-        # Layer 2
-        out = vvgs @ out
-        out = self.ln2(out)
-        out = self.linear2(out)
-        out = F.relu(out)
-        out = self.dropout(out)
+        if self.pool == "mean":
+            out = out.mean(dim=-2)
+        elif self.pool == "max":
+            out, _ = out.max(dim=-2)
+        else:
+            out = out[..., 0, :]  # cls token
 
-        out = out[..., 0, :]
         if self.out_dim > 1:
             out = F.log_softmax(out, dim=-1)
         return out
@@ -72,6 +91,8 @@ class VVGTransformer(L.LightningModule):
         task_name: str,
         encoder_lr: float = 1e-5,
         gcn_lr: float = 1e-3,
+        dropout: float = 0.1,
+        pool: str = "cls",
         parameter_search: bool = False,
         define_metric: str | None = None,
     ) -> None:
@@ -86,7 +107,7 @@ class VVGTransformer(L.LightningModule):
 
         self.num_labels = GLUE_NUM_LABELS[task_name]
         self.encoder = AutoModel.from_pretrained(model_name_or_path)
-        self.gcn = GCN(768, self.num_labels)
+        self.gcn = OverallGCN(768, self.num_labels, dropout=dropout, pool=pool)
 
         self.metric = get_glue_task_metric(task_name)
         self.use_token_type_ids = is_token_type_ids_input(self.encoder)
