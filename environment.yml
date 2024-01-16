@@ -9,12 +9,13 @@ dependencies:
   - python >=3.11.0,<3.12
   - pytorch>=2.1.1
   - pytorch-cuda=11.8
-  - lightning
-  - transformers
+  - click
   - datasets
   - evaluate
-  - numba
+  - lightning
   - numpy
   - python-dotenv
   - scikit-learn
+  - transformers
+  - vector-vis-graph
   - wandb

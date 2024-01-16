@@ -5,17 +5,18 @@ description = "Encoder pooler with visibility graphs."
 authors = ["Tuna Alikaşifoğlu <tunakasif@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = ">=3.10,<3.12"
+click = "^8.1.7"
 datasets = "^2.16.1"
 evaluate = "^0.4.1"
 lightning = "^2.1.3"
+numpy = "^1.26.3"
+python-dotenv = "^1.0.0"
+scikit-learn = "^1.3.2"
 torch = "^2.1.2"
 transformers = { extras = ["sentencepiece"], version = "^4.36.2" }
-vector-vis-graph = { git = "https://github.com/tunakasif/vector-vis-graph.git" }
-scikit-learn = "^1.3.2"
+vector-vis-graph = "^0.7.3"
 wandb = {extras = ["sweeps"], version = "^0.16.2"}
-python-dotenv = "^1.0.0"
-click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.4"
