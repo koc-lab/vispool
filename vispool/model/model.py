@@ -12,7 +12,7 @@ from vector_vis_graph import WeightMethod
 
 from vispool import GLUE_NUM_LABELS
 from vispool.glue.transformer import get_glue_task_metric, is_token_type_ids_input
-from vispool.model.gcn import OverallGCN
+from vispool.model.gcn import OverallGCN, PoolStrategy
 from vispool.vvg import VVGType, get_vvgs
 
 
@@ -26,7 +26,7 @@ class VVGTransformer(L.LightningModule):
         gcn_lr: float = 1e-4,
         dropout: float = 0.1,
         gcn_hidden_dim: int = 128,
-        pool: str = "cls",
+        pool: PoolStrategy = PoolStrategy.CLS,
         vvg_type: VVGType = VVGType.NATURAL,
         timeline: np.ndarray | None = None,
         weight_method: WeightMethod = WeightMethod.UNWEIGHTED,

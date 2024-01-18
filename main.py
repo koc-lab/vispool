@@ -5,6 +5,7 @@ from vector_vis_graph import WeightMethod
 
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
+from vispool.model.gcn import PoolStrategy
 from vispool.model.model import VVGTransformer
 from vispool.vvg import VVGType
 
@@ -13,7 +14,7 @@ load_dotenv()
 SEED = 42
 TASK_NAME = "mrpc"
 MODEL_CHECKPOINT = "distilbert-base-uncased"
-POOL = "cls"
+POOL = PoolStrategy.CLS
 
 logger = CSVLogger(save_dir="logs", name=TASK_NAME)
 

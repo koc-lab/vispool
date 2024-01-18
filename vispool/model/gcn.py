@@ -1,8 +1,15 @@
+from enum import Enum
 from typing import Any
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+class PoolStrategy(Enum):
+    MEAN = "mean"
+    MAX = "max"
+    CLS = "cls"
 
 
 class BatchedGCNConv(nn.Module):
@@ -31,7 +38,7 @@ class OverallGCN(nn.Module):
         out_dim: int,
         hidden_dim: int = 128,
         dropout: float = 0.1,
-        pool: str = "cls",
+        pool: PoolStrategy = PoolStrategy.CLS,
     ) -> None:
         super().__init__()
         self.in_dim = in_dim
