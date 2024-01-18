@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from enum import Enum, auto
+from enum import Enum
 from functools import partial
 
 import numpy as np
@@ -10,8 +10,8 @@ from vispool import USE_THREADPOOL
 
 
 class VVGType(Enum):
-    NATURAL = auto()
-    HORIZONTAL = auto()
+    NATURAL = "natural"
+    HORIZONTAL = "horizontal"
 
 
 def get_vvg(
