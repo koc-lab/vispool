@@ -93,7 +93,7 @@ def train_our() -> None:
     gcn_hidden_dim = logger.experiment.config.get("gcn_hidden_dim")
     dropout = logger.experiment.config.get("dropout")
 
-    pool = PoolStrategy(logger.experiment.config.get("gcn_lr"))
+    pool = PoolStrategy(logger.experiment.config.get("pool"))
     vvg_type = VVGType(logger.experiment.config.get("vvg_type"))
     penetrable_limit = logger.experiment.config.get("penetrable_limit")
 
