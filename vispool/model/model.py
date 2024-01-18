@@ -1,87 +1,19 @@
-from concurrent.futures import ThreadPoolExecutor
 from os import PathLike
 from typing import Any, Mapping
 
 import lightning as L
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from transformers import AutoModel
-from vector_vis_graph import WeightMethod, horizontal_vvg, natural_vvg  # noqa
+from vector_vis_graph import WeightMethod
 
-from vispool import GLUE_NUM_LABELS, USE_THREADPOOL
+from vispool import GLUE_NUM_LABELS
 from vispool.glue.transformer import get_glue_task_metric, is_token_type_ids_input
-
-
-def get_vvg(tensor: torch.Tensor) -> torch.Tensor:
-    device = tensor.device
-    tensor_np = tensor.to("cpu").detach().numpy()
-    vvg = natural_vvg(tensor_np).astype(np.float32)
-    return torch.from_numpy(vvg).to(device)
-
-
-def get_vvgs_parallel(tensor: torch.Tensor) -> torch.Tensor:
-    with ThreadPoolExecutor() as executor:
-        results = list(executor.map(get_vvg, tensor))
-    return torch.stack(results)
-
-
-class GCN(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int, dropout: float = 0.1) -> None:
-        super().__init__()
-        self.layer_norm = nn.LayerNorm(in_dim)
-        self.linear = nn.Linear(in_dim, out_dim)
-        self.in_dim = in_dim
-        self.out_dim = out_dim
-
-    def _init_weights(self) -> None:
-        nn.init.kaiming_uniform_(self.linear.weight)
-
-    def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
-        out = vvgs @ token_embs
-        out = self.layer_norm(out)
-        out = self.linear(out)
-        out = F.relu(out)
-        return out
-
-
-class OverallGCN(nn.Module):
-    def __init__(
-        self,
-        in_dim: int,
-        out_dim: int,
-        hidden_dim: int = 128,
-        dropout: float = 0.1,
-        pool: str = "cls",
-    ) -> None:
-        super().__init__()
-        self.in_dim = in_dim
-        self.hidden_dim = hidden_dim
-        self.out_dim = out_dim
-        self.dropout = nn.Dropout(dropout)
-        self.gcn1 = GCN(in_dim, hidden_dim, dropout)
-        self.gcn2 = GCN(hidden_dim, out_dim, dropout)
-        self.pool = pool
-
-    def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
-        out = self.gcn1(vvgs, token_embs)
-        out = self.dropout(out)
-        out = self.gcn2(vvgs, out)
-        out = self.dropout(out)
-
-        if self.pool == "mean":
-            out = out.mean(dim=-2)
-        elif self.pool == "max":
-            out, _ = out.max(dim=-2)
-        else:
-            out = out[..., 0, :]  # cls token
-
-        if self.out_dim > 1:
-            out = F.log_softmax(out, dim=-1)
-        return out
+from vispool.model.gcn import OverallGCN
+from vispool.vvg import VVGType, get_vvgs
 
 
 class VVGTransformer(L.LightningModule):
@@ -89,47 +21,74 @@ class VVGTransformer(L.LightningModule):
         self,
         model_name_or_path: str | PathLike[str],
         task_name: str,
+        *,
         encoder_lr: float = 1e-5,
-        gcn_lr: float = 1e-3,
+        gcn_lr: float = 1e-4,
         dropout: float = 0.1,
+        gcn_hidden_dim: int = 128,
         pool: str = "cls",
+        vvg_type: VVGType = VVGType.NATURAL,
+        timeline: np.ndarray | None = None,
+        weight_method: WeightMethod = WeightMethod.UNWEIGHTED,
+        penetrable_limit: int = 0,
+        directed: bool = False,
         parameter_search: bool = False,
         define_metric: str | None = None,
     ) -> None:
         super().__init__()
+
+        # Hyperparameters
         if not parameter_search:
             self.save_hyperparameters()
+        self.define_metric = define_metric
+
+        # Network Hyperparameters
         self.model_name_or_path = model_name_or_path
         self.task_name = task_name
         self.encoder_lr = encoder_lr
         self.gcn_lr = gcn_lr
-        self.define_metric = define_metric
+        self.gcn_hidden_dim = gcn_hidden_dim
 
-        self.num_labels = GLUE_NUM_LABELS[task_name]
-        self.encoder = AutoModel.from_pretrained(model_name_or_path)
-        self.gcn = OverallGCN(768, self.num_labels, dropout=dropout, pool=pool)
+        # VVG Hyperparameters
+        self.vvg_type = vvg_type
+        self.timeline = timeline
+        self.weight_method = weight_method
+        self.penetrable_limit = penetrable_limit
+        self.directed = directed
 
+        # Metric and Loss
         self.metric = get_glue_task_metric(task_name)
-        self.use_token_type_ids = is_token_type_ids_input(self.encoder)
+        self.num_labels = GLUE_NUM_LABELS[task_name]
+        self.loss_fn = F.mse_loss if self.num_labels == 1 else F.nll_loss  # type: ignore
 
-        if self.num_labels == 1:
-            self.loss_fn = F.mse_loss
-        else:
-            self.loss_fn = F.nll_loss  # type: ignore
+        # Model
+        self.encoder = AutoModel.from_pretrained(model_name_or_path)
+        self.gcn = OverallGCN(
+            in_dim=self.encoder.config.hidden_size,
+            hidden_dim=self.gcn_hidden_dim,
+            out_dim=self.num_labels,
+            dropout=dropout,
+            pool=pool,
+        )
+        self.use_token_type_ids = is_token_type_ids_input(self.encoder)
 
     def forward(self, **inputs: dict) -> Any:
         token_embs = self.encoder(**inputs)[0]
-        if USE_THREADPOOL:
-            vvgs = get_vvgs_parallel(token_embs)
-        else:
-            vvgs = torch.stack([get_vvg(token_emb) for token_emb in token_embs])
+        vvgs = get_vvgs(
+            token_embs,
+            vvg_type=self.vvg_type,
+            timeline=self.timeline,
+            weight_method=self.weight_method,
+            penetrable_limit=self.penetrable_limit,
+            directed=self.directed,
+        )
         logits = self.gcn(vvgs, token_embs)
         return logits
 
     def training_step(self, batch: Mapping, batch_idx: int) -> dict:
         input_dict = {"input_ids": batch["input_ids"], "attention_mask": batch["attention_mask"]}
         logits = self(**input_dict)
-        loss = self.loss_fn(logits, batch["labels"])
+        loss = self.loss_fn(logits, batch["labels"])  # type: ignore
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return {"loss": loss}
 
@@ -139,14 +98,14 @@ class VVGTransformer(L.LightningModule):
 
         input_dict = {"input_ids": batch["input_ids"], "attention_mask": batch["attention_mask"]}
         logits = self(**input_dict)
-        val_loss = self.loss_fn(logits, batch["labels"])
+        loss = self.loss_fn(logits, batch["labels"])  # type: ignore
         preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
         labels = batch["labels"]
 
-        self.log("val/loss", val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         metric_dict = self.metric.compute(predictions=preds, references=labels)
         if metric_dict is not None:
-            log_dict = {"loss": val_loss} if metric_dict is None else {"loss": val_loss, **metric_dict}
+            log_dict = {"loss": loss} if metric_dict is None else {"loss": loss, **metric_dict}
             log_dict = {f"val/{k}": v for k, v in metric_dict.items()}
             self.log_dict(log_dict, prog_bar=True)
 

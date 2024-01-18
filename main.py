@@ -1,10 +1,12 @@
 import lightning as L
 from dotenv import load_dotenv
 from lightning.pytorch.loggers import CSVLogger
+from vector_vis_graph import WeightMethod
 
 from vispool.glue.datamodule import GLUEDataModule
 from vispool.glue.transformer import GLUETransformer
 from vispool.model.model import VVGTransformer
+from vispool.vvg import VVGType
 
 load_dotenv()
 
@@ -38,7 +40,7 @@ trainer = L.Trainer(
     deterministic=True,
     logger=logger,
 )
-trainer.fit(base_model, datamodule=dm)
+# trainer.fit(base_model, datamodule=dm)
 
 # Model
 L.seed_everything(SEED)
@@ -54,8 +56,16 @@ vvg_model = VVGTransformer(
     task_name=TASK_NAME,
     encoder_lr=1e-5,
     gcn_lr=1e-4,
+    gcn_hidden_dim=256,
+    dropout=0.1,
     pool=POOL,
+    vvg_type=VVGType.NATURAL,
+    weight_method=WeightMethod.UNWEIGHTED,
+    penetrable_limit=0,
+    directed=False,
+    parameter_search=False,
 )
+print(vvg_model.gcn)
 
 print("Training vvg on:", TASK_NAME)
 trainer = L.Trainer(
