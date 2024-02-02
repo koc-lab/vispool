@@ -48,7 +48,8 @@ class OverallGCN(nn.Module):
         self.out_dim = out_dim
         self.dropout = nn.Dropout(dropout)
         self.gcn1 = BatchedGCNConv(in_dim, hidden_dim, layer_norm)
-        self.gcn2 = BatchedGCNConv(hidden_dim, out_dim, layer_norm)
+        self.gcn2 = BatchedGCNConv(hidden_dim, hidden_dim // 2, layer_norm)
+        self.linear = nn.Linear(hidden_dim // 2, out_dim)
         self.pool = pool
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
@@ -56,6 +57,7 @@ class OverallGCN(nn.Module):
         out = self.dropout(out)
         out = self.gcn2(vvgs, out)
         out = self.dropout(out)
+        out = self.linear(out)
 
         if self.pool == "mean":
             out = out.mean(dim=-2)
