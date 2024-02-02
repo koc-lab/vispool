@@ -45,7 +45,7 @@ def our_sweep(model_checkpoint: str, task_name: str) -> str:
 
     sweep_configuration = {
         "name": f"vispool:{MODEL_CHECKPOINT}:{TASK_NAME}",
-        "method": "random",
+        "method": "bayes",
         "metric": {
             "goal": "maximize",
             "name": MONITOR_METRIC,
@@ -54,15 +54,15 @@ def our_sweep(model_checkpoint: str, task_name: str) -> str:
             "model_checkpoint": {"value": MODEL_CHECKPOINT},
             "task_name": {"value": TASK_NAME},
             "monitor_metric": {"value": MONITOR_METRIC},
-            "max_epochs": {"value": 10},
-            "patience": {"value": 3},
+            "max_epochs": {"value": 15},
+            "patience": {"value": 5},
             "batch_size": {"value": 32},
             "max_seq_length": {"value": 128},
             "seed": {"value": 42},
             "encoder_lr": {"distribution": "uniform", "min": 1e-5, "max": 1e-4},
-            "gcn_lr": {"distribution": "uniform", "min": 1e-4, "max": 1e-3},
+            "gcn_lr": {"distribution": "uniform", "min": 1e-5, "max": 1e-2},
             "dropout": {"distribution": "uniform", "min": 0.1, "max": 0.5},
-            "gcn_hidden_dim": {"values": [128, 256, 512]},
+            "gcn_hidden_dim": {"values": [128, 512]},
             "pool": {"distribution": "categorical", "values": ["cls", "mean", "max"]},
             "vvg_type": {"distribution": "categorical", "values": ["natural", "horizontal"]},
             "penetrable_limit": {"distribution": "int_uniform", "min": 0, "max": 5},
