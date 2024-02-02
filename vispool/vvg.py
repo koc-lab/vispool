@@ -22,6 +22,7 @@ def get_vvg(
     weight_method: WeightMethod = WeightMethod.UNWEIGHTED,
     penetrable_limit: int = 0,
     directed: bool = False,
+    degree_normalize: bool = False,
 ) -> torch.Tensor:
     device = multivariate.device
     tensor_np = multivariate.to("cpu").detach().numpy()
@@ -33,7 +34,13 @@ def get_vvg(
         penetrable_limit=penetrable_limit,
         directed=directed,
     ).astype(np.float32)
-    return torch.from_numpy(vvg).to(device)
+    vvg_pt = torch.from_numpy(vvg).to(device)
+    if degree_normalize:
+        degrees = vvg_pt.sum(dim=-1)
+        reciprocal = torch.where(degrees != 0, torch.reciprocal(degrees), 0)
+        sqrt_reciprocal = torch.pow(reciprocal, 0.5)
+        vvg_pt = torch.diag(sqrt_reciprocal) @ vvg_pt @ torch.diag(sqrt_reciprocal)
+    return vvg_pt
 
 
 def get_vvgs(
@@ -44,6 +51,7 @@ def get_vvgs(
     weight_method: WeightMethod = WeightMethod.UNWEIGHTED,
     penetrable_limit: int = 0,
     directed: bool = False,
+    degree_normalize: bool = False,
 ) -> torch.Tensor:
     if USE_THREADPOOL:
         get_vvg_partial = partial(
@@ -53,6 +61,7 @@ def get_vvgs(
             weight_method=weight_method,
             penetrable_limit=penetrable_limit,
             directed=directed,
+            degree_normalize=degree_normalize,
         )
 
         with ThreadPoolExecutor() as executor:

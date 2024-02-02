@@ -32,6 +32,7 @@ class VVGTransformer(L.LightningModule):
         weight_method: WeightMethod = WeightMethod.UNWEIGHTED,
         penetrable_limit: int = 0,
         directed: bool = False,
+        degree_normalize: bool = False,
         parameter_search: bool = False,
         define_metric: str | None = None,
     ) -> None:
@@ -55,6 +56,7 @@ class VVGTransformer(L.LightningModule):
         self.weight_method = weight_method
         self.penetrable_limit = penetrable_limit
         self.directed = directed
+        self.degree_normalize = degree_normalize
 
         # Metric and Loss
         self.metric = get_glue_task_metric(task_name)
@@ -81,6 +83,7 @@ class VVGTransformer(L.LightningModule):
             weight_method=self.weight_method,
             penetrable_limit=self.penetrable_limit,
             directed=self.directed,
+            degree_normalize=self.degree_normalize,
         )
         logits = self.gcn(vvgs, token_embs)
         return logits
