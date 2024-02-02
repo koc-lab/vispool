@@ -13,11 +13,11 @@ class PoolStrategy(Enum):
 
 
 class BatchedGCNConv(nn.Module):
-    def __init__(self, in_dim: int, out_dim: int) -> None:
+    def __init__(self, in_dim: int, out_dim: int, layer_norm: bool = True) -> None:
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.layer_norm = nn.LayerNorm(in_dim)
+        self.layer_norm = nn.LayerNorm(in_dim) if layer_norm else None
         self.linear = nn.Linear(in_dim, out_dim)
 
     def _init_weights(self) -> None:
@@ -25,7 +25,8 @@ class BatchedGCNConv(nn.Module):
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
         out = vvgs @ token_embs
-        out = self.layer_norm(out)
+        if self.layer_norm is not None:
+            out = self.layer_norm(out)
         out = self.linear(out)
         out = F.relu(out)
         return out
@@ -39,14 +40,15 @@ class OverallGCN(nn.Module):
         hidden_dim: int = 128,
         dropout: float = 0.1,
         pool: PoolStrategy = PoolStrategy.CLS,
+        layer_norm: bool = True,
     ) -> None:
         super().__init__()
         self.in_dim = in_dim
         self.hidden_dim = hidden_dim
         self.out_dim = out_dim
         self.dropout = nn.Dropout(dropout)
-        self.gcn1 = BatchedGCNConv(in_dim, hidden_dim)
-        self.gcn2 = BatchedGCNConv(hidden_dim, out_dim)
+        self.gcn1 = BatchedGCNConv(in_dim, hidden_dim, layer_norm)
+        self.gcn2 = BatchedGCNConv(hidden_dim, out_dim, layer_norm)
         self.pool = pool
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:

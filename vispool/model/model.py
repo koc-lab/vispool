@@ -25,6 +25,7 @@ class VVGTransformer(L.LightningModule):
         encoder_lr: float = 1e-5,
         gcn_lr: float = 1e-4,
         dropout: float = 0.1,
+        layer_norm: bool = True,
         gcn_hidden_dim: int = 128,
         pool: PoolStrategy = PoolStrategy.CLS,
         vvg_type: VVGType = VVGType.NATURAL,
@@ -71,6 +72,7 @@ class VVGTransformer(L.LightningModule):
             out_dim=self.num_labels,
             dropout=dropout,
             pool=pool,
+            layer_norm=layer_norm,
         )
         self.use_token_type_ids = is_token_type_ids_input(self.encoder)
 

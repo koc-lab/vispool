@@ -25,6 +25,7 @@ PENETRABLE_LIMIT = 0
 MAX_EPOCHS = 10
 RUN_BASELINE = True
 DEGREE_NORMALIZE = True
+LAYER_NORM = False
 
 logger = CSVLogger(save_dir="logs", name=TASK_NAME)
 
@@ -77,6 +78,7 @@ vvg_model = VVGTransformer(
     directed=False,
     degree_normalize=DEGREE_NORMALIZE,
     parameter_search=False,
+    layer_norm=LAYER_NORM,
 )
 
 print("Training vvg on:", TASK_NAME)
