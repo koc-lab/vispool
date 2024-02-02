@@ -1,4 +1,5 @@
 import platform
+import subprocess
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent.absolute()
@@ -7,7 +8,21 @@ WANDB_LOG_DIR.mkdir(exist_ok=True)
 
 __version__ = "0.1.0"
 
-USE_THREADPOOL = True if platform.machine() == "x86_64" else False
+
+def is_intel_linux() -> bool:
+    is_x86_64_linux = platform.machine() == "x86_64" and platform.system() == "Linux"
+    try:
+        command_output = subprocess.check_output(["/usr/bin/lscpu"]).decode("utf-8")
+        is_intel_cpu = "Intel" in command_output
+    except Exception:
+        is_intel_cpu = False
+
+    print(f"Intel Linux: {is_x86_64_linux and is_intel_cpu}")
+    return is_x86_64_linux and is_intel_cpu
+
+
+USE_THREADPOOL = is_intel_linux()
+
 
 GLUE_TASKS = (
     "wnli",

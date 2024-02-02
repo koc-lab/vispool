@@ -26,5 +26,5 @@ lint:
 	$(EXECUTER) mypy .
 
 security:
-	$(EXECUTER) bandit -r $(PROJECT_NAME)/
+	$(EXECUTER) bandit -c pyproject.toml -r $(PROJECT_NAME)/
 
