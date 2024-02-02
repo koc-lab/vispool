@@ -17,7 +17,7 @@ class BatchedGCNConv(nn.Module):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.layer_norm = nn.LayerNorm(in_dim) if layer_norm else None
+        self.layer_norm = nn.LayerNorm(out_dim) if layer_norm else None
         self.linear = nn.Linear(in_dim, out_dim)
 
     def _init_weights(self) -> None:
@@ -25,9 +25,9 @@ class BatchedGCNConv(nn.Module):
 
     def forward(self, vvgs: torch.Tensor, token_embs: torch.Tensor) -> Any:
         out = vvgs @ token_embs
+        out = self.linear(out)
         if self.layer_norm is not None:
             out = self.layer_norm(out)
-        out = self.linear(out)
         out = F.relu(out)
         return out
 
