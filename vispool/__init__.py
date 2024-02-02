@@ -1,6 +1,7 @@
 import platform
-import subprocess
 from pathlib import Path
+
+from numba import config
 
 ROOT_DIR = Path(__file__).parent.parent.absolute()
 WANDB_LOG_DIR = ROOT_DIR.joinpath("wandb_logs")
@@ -9,19 +10,16 @@ WANDB_LOG_DIR.mkdir(exist_ok=True)
 __version__ = "0.1.0"
 
 
-def is_intel_linux() -> bool:
-    is_x86_64_linux = platform.machine() == "x86_64" and platform.system() == "Linux"
-    try:
-        command_output = subprocess.check_output(["/usr/bin/lscpu"]).decode("utf-8")
-        is_intel_cpu = "Intel" in command_output
-    except Exception:
-        is_intel_cpu = False
-
-    print(f"Intel Linux: {is_x86_64_linux and is_intel_cpu}")
-    return is_x86_64_linux and is_intel_cpu
+def is_threadpool_usable() -> bool:
+    if platform.machine() == "x86_64":
+        config.THREADING_LAYER_PRIORITY = ["omp", "tbb", "workqueue"]  # type: ignore
+        use_threadpool = True
+    else:
+        use_threadpool = False
+    return use_threadpool
 
 
-USE_THREADPOOL = is_intel_linux()
+USE_THREADPOOL = is_threadpool_usable()
 
 
 GLUE_TASKS = (
