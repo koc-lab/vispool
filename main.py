@@ -12,67 +12,78 @@ from vispool.vvg import VVGType
 load_dotenv()
 
 SEED = 42
-TASK_NAME = "mrpc"
+TASK_NAME = "rte"
 MODEL_CHECKPOINT = "distilbert-base-uncased"
 POOL = PoolStrategy.CLS
+BATCH_SIZE = 32
+NUM_WORKERS = 8
+ENC_LR = 1e-5
+GCN_LR = 1e-2
+HIDDEN_DIM = 128
+DROPOUT = 0.1
+PENETRABLE_LIMIT = 0
+MAX_EPOCHS = 10
+RUN_BASELINE = True
+DEGREE_NORMALIZE = True
 
 logger = CSVLogger(save_dir="logs", name=TASK_NAME)
 
 # Baseline
-L.seed_everything(SEED)
-dm = GLUEDataModule(
-    MODEL_CHECKPOINT,
-    task_name=TASK_NAME,
-    batch_size=32,
-    num_workers=4,
-)
+if RUN_BASELINE:
+    L.seed_everything(SEED)
+    dm = GLUEDataModule(
+        MODEL_CHECKPOINT,
+        task_name=TASK_NAME,
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+    )
 
-base_model = GLUETransformer(
-    MODEL_CHECKPOINT,
-    task_name=TASK_NAME,
-    learning_rate=1e-5,
-)
+    base_model = GLUETransformer(
+        MODEL_CHECKPOINT,
+        task_name=TASK_NAME,
+        learning_rate=ENC_LR,
+    )
 
-print("Training baseline on:", TASK_NAME)
-trainer = L.Trainer(
-    accelerator="auto",
-    devices=1,
-    max_epochs=1,
-    deterministic=True,
-    logger=logger,
-)
-# trainer.fit(base_model, datamodule=dm)
+    print("Training baseline on:", TASK_NAME)
+    trainer = L.Trainer(
+        accelerator="auto",
+        devices=1,
+        max_epochs=MAX_EPOCHS,
+        deterministic=True,
+        logger=logger,
+    )
+    trainer.fit(base_model, datamodule=dm)
 
 # Model
 L.seed_everything(SEED)
 dm = GLUEDataModule(
     MODEL_CHECKPOINT,
     task_name=TASK_NAME,
-    batch_size=32,
-    num_workers=4,
+    batch_size=BATCH_SIZE,
+    num_workers=NUM_WORKERS,
 )
 
 vvg_model = VVGTransformer(
     MODEL_CHECKPOINT,
     task_name=TASK_NAME,
-    encoder_lr=1e-5,
-    gcn_lr=1e-4,
-    gcn_hidden_dim=256,
-    dropout=0.1,
+    encoder_lr=ENC_LR,
+    gcn_lr=GCN_LR,
+    gcn_hidden_dim=HIDDEN_DIM,
+    dropout=DROPOUT,
     pool=POOL,
     vvg_type=VVGType.NATURAL,
     weight_method=WeightMethod.UNWEIGHTED,
-    penetrable_limit=0,
+    penetrable_limit=PENETRABLE_LIMIT,
     directed=False,
+    degree_normalize=DEGREE_NORMALIZE,
     parameter_search=False,
 )
-print(vvg_model.gcn)
 
 print("Training vvg on:", TASK_NAME)
 trainer = L.Trainer(
     accelerator="auto",
     devices=1,
-    max_epochs=1,
+    max_epochs=MAX_EPOCHS,
     deterministic=True,
     logger=logger,
 )
