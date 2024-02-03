@@ -2,7 +2,7 @@ from os import cpu_count, getenv
 from typing import Optional
 
 import lightning as L
-from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+from lightning.pytorch.callbacks import EarlyStopping
 from lightning.pytorch.loggers import WandbLogger
 from vector_vis_graph import WeightMethod
 
@@ -98,7 +98,6 @@ def train_our() -> None:
     penetrable_limit = logger.experiment.config.get("penetrable_limit")
 
     # Callbacks
-    checkpoint_callback = ModelCheckpoint(monitor=MONITOR_METRIC, mode="max")
     early_stopping_callback = EarlyStopping(monitor=MONITOR_METRIC, mode="max", patience=patience)
 
     # Train
@@ -131,7 +130,7 @@ def train_our() -> None:
         devices=1,
         max_epochs=max_epochs,
         logger=logger,  # type: ignore
-        callbacks=[checkpoint_callback, early_stopping_callback],
+        callbacks=[early_stopping_callback],
         deterministic=True,
     )
     trainer.fit(model, datamodule=dm)
