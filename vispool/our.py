@@ -73,6 +73,8 @@ def our_sweep(model_checkpoint: str, task_name: str) -> str:
 
 
 def train_our() -> None:
+    global MODEL_CHECKPOINT, TASK_NAME, MONITOR_METRIC
+
     if MODEL_CHECKPOINT is None or TASK_NAME is None or MONITOR_METRIC is None:
         raise ValueError("Must run `our_sweep`.")
 
@@ -83,6 +85,15 @@ def train_our() -> None:
         tags=["vispool", MODEL_CHECKPOINT, TASK_NAME],
         resume=True,
     )
+    base_train_our(logger)
+
+
+def base_train_our(logger: WandbLogger) -> None:
+    global MODEL_CHECKPOINT, TASK_NAME, MONITOR_METRIC
+
+    if MODEL_CHECKPOINT is None or TASK_NAME is None or MONITOR_METRIC is None:
+        raise ValueError("Must run `our_sweep`.")
+
     seed = logger.experiment.config.get("seed")
     max_epochs = logger.experiment.config.get("max_epochs")
     patience = logger.experiment.config.get("patience")
