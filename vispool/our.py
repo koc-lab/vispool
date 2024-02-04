@@ -88,6 +88,57 @@ def train_our() -> None:
     base_train_our(logger)
 
 
+def single_our_agent(sweep_id: str, entity: Optional[str] = None, project: Optional[str] = None) -> None:
+    global MODEL_CHECKPOINT, TASK_NAME, MONITOR_METRIC
+
+    if entity is None:
+        entity = getenv("WANDB_ENTITY")
+    if project is None:
+        project = getenv("WANDB_PROJECT")
+    if entity is None or project is None:
+        raise ValueError("Must specify entity and project.")
+
+    tuner = wandb.controller(sweep_id, entity=entity, project=project)
+    parameters = tuner.sweep_config.get("parameters")
+    if parameters is not None:
+        MODEL_CHECKPOINT = parameters.get("model_checkpoint")["value"]
+        TASK_NAME = parameters.get("task_name")["value"]
+        MONITOR_METRIC = parameters.get("monitor_metric")["value"]
+    wandb.agent(sweep_id, function=single_train_our)
+
+
+def single_our_sweep(run_id: str) -> str:
+    api = wandb.Api()
+    path = f"{getenv('WANDB_PROJECT')}/{run_id}"
+    run_config = api.run(path).config
+    parameters = {k: {"value": v} for k, v in run_config.items()}
+    parameters.pop("seed", None)
+    parameters["seeds"] = {"values": [42]}
+
+    model_checkpoint, task_name = run_config["model_checkpoint"], run_config["task_name"]
+    sweep_configuration = {
+        "name": f"single-vispool:{model_checkpoint}:{task_name}",
+        "method": "grid",
+        "parameters": parameters,
+    }
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project="vispool")
+    return sweep_id
+
+
+def single_train_our() -> None:
+    if MODEL_CHECKPOINT is None or TASK_NAME is None or MONITOR_METRIC is None:
+        raise ValueError("Must run `our_sweep`.")
+
+    # Setup
+    logger = WandbLogger(
+        project="vispool",
+        save_dir=WANDB_LOG_DIR,
+        tags=["vispool", "single", MODEL_CHECKPOINT, TASK_NAME],
+        resume=True,
+    )
+    base_train_our(logger)
+
+
 def base_train_our(logger: WandbLogger) -> None:
     global MODEL_CHECKPOINT, TASK_NAME, MONITOR_METRIC
 
