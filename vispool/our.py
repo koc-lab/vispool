@@ -112,7 +112,7 @@ def single_our_sweep(run_id: str) -> str:
     path = f"{getenv('WANDB_PROJECT')}/{run_id}"
     run_config = api.run(path).config
     parameters = {k: {"value": v} for k, v in run_config.items()}
-    parameters["seed"] = {"values": [42]}
+    parameters["seed"] = {"values": [40, 41, 42, 43, 44]}
 
     model_checkpoint, task_name = run_config["model_checkpoint"], run_config["task_name"]
     sweep_configuration = {
