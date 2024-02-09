@@ -93,6 +93,8 @@ class VVGTransformer(L.LightningModule):
     def training_step(self, batch: Mapping, batch_idx: int) -> dict:
         input_dict = {"input_ids": batch["input_ids"], "attention_mask": batch["attention_mask"]}
         logits = self(**input_dict)
+        if self.num_labels == 1:
+            logits = logits.squeeze()
         loss = self.loss_fn(logits, batch["labels"])  # type: ignore
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return {"loss": loss}
@@ -103,9 +105,13 @@ class VVGTransformer(L.LightningModule):
 
         input_dict = {"input_ids": batch["input_ids"], "attention_mask": batch["attention_mask"]}
         logits = self(**input_dict)
-        loss = self.loss_fn(logits, batch["labels"])  # type: ignore
-        preds = logits.squeeze() if self.num_labels == 1 else torch.argmax(logits, dim=-1)
         labels = batch["labels"]
+        if self.num_labels == 1:
+            logits = logits.squeeze()
+            preds = logits
+        else:
+            preds = torch.argmax(logits, dim=-1)
+        loss = self.loss_fn(logits, labels)  # type: ignore
 
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         metric_dict = self.metric.compute(predictions=preds, references=labels)
