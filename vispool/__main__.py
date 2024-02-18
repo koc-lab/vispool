@@ -39,17 +39,6 @@ def baseline_agent(sweep_id: str) -> None:
 @cli.command()
 @click.argument("model_checkpoint", type=click.STRING)
 @click.argument("task_name", type=click.STRING)
-def baseline_sweep_agent(model_checkpoint: str, task_name: str) -> None:
-    """Initialize a WandB sweep for fine-tuning a baseline transformer model
-    generated from MODEL_CHECKPOINT on a GLUE task with name TASK_NAME. Then,
-    attach an agent to the created sweep."""
-    sweep_id = base_sweep(model_checkpoint, task_name)
-    base_agent(sweep_id)
-
-
-@cli.command()
-@click.argument("model_checkpoint", type=click.STRING)
-@click.argument("task_name", type=click.STRING)
 def vispool_sweep(model_checkpoint: str, task_name: str) -> None:
     """Initialize a WandB sweep for fine-tuning a vispool model
     generated from MODEL_CHECKPOINT on a GLUE task with name TASK_NAME."""
@@ -61,17 +50,6 @@ def vispool_sweep(model_checkpoint: str, task_name: str) -> None:
 @click.argument("sweep_id", type=click.STRING)
 def vispool_agent(sweep_id: str) -> None:
     """Attach an agent to the created vispool sweep with the given SWEEP_ID."""
-    our_agent(sweep_id)
-
-
-@cli.command()
-@click.argument("model_checkpoint", type=click.STRING)
-@click.argument("task_name", type=click.STRING)
-def vispool_sweep_agent(model_checkpoint: str, task_name: str) -> None:
-    """Initialize a WandB sweep for fine-tuning a vispool model
-    generated from MODEL_CHECKPOINT on a GLUE task with name TASK_NAME. Then,
-    attach an agent to the created sweep."""
-    sweep_id = our_sweep(model_checkpoint, task_name)
     our_agent(sweep_id)
 
 
@@ -88,16 +66,6 @@ def vispool_single_sweep(run_id: str) -> None:
 @click.argument("sweep_id", type=click.STRING)
 def vispool_single_agent(sweep_id: str) -> None:
     """Attach an agent to the created vispool single sweep with the given SWEEP_ID."""
-    single_our_agent(sweep_id)
-
-
-@cli.command()
-@click.argument("run_id", type=click.STRING)
-def vispool_single_sweep_agent(run_id: str) -> None:
-    """Initialize a WandB grid sweep for different seeds with the hyperparameter values
-    obtained in the given run with the specified ``run_id``. Then, attach an agent to
-    the created sweep."""
-    sweep_id = single_our_sweep(run_id)
     single_our_agent(sweep_id)
 
 
