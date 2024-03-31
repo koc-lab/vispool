@@ -17,6 +17,8 @@ torch = "^2.1.2"
 transformers = { extras = ["sentencepiece"], version = "^4.36.2" }
 vector-vis-graph = "^0.7.3"
 wandb = {extras = ["sweeps"], version = "^0.16.2"}
+networkx = "^3.2.1"
+matplotlib = "^3.8.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.4"
