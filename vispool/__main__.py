@@ -182,8 +182,20 @@ def vispool_local_single(
     if visualize and isinstance(model, VisualVVGTransformer):
         document_graphs = np.array([batch[0].cpu().numpy() for batch in model.graphs])
         if save_visualization_graphs:
-            np.savez(f"visualisation-graphs-list-{model_checkpoint}.npz", *document_graphs)
+            np.save(f"visualisation-graphs-list-{model_checkpoint}.npy", document_graphs)
         visualize_graph_with_fixed_positions(adj_matrices=document_graphs, out_dir=Path(visualization_dir))
+
+
+@cli.command()
+@click.argument("npy-file", type=click.Path(exists=True))
+@click.option("--visualization-dir", type=click.Path(exists=True), default=".", help="Visualization directory.")
+def vispool_visualize_from_npy(
+    npy_file: str,
+    visualization_dir: str,
+) -> None:
+    """Visualize graphs from a given npy file."""
+    document_graphs = np.load(npy_file)
+    visualize_graph_with_fixed_positions(adj_matrices=document_graphs, out_dir=Path(visualization_dir))
 
 
 @cli.command()
