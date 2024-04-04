@@ -12,7 +12,7 @@ from vector_vis_graph import WeightMethod
 
 from vispool.baseline import baseline_agent as base_agent
 from vispool.baseline import baseline_sweep as base_sweep
-from vispool.local import train_single_vispool_local
+from vispool.local import train_single_baseline_local, train_single_vispool_local
 from vispool.model.gcn import PoolStrategy
 from vispool.our import our_agent, our_sweep, single_our_agent, single_our_sweep
 from vispool.visualization import VisualVVGTransformer, visualize_graph_with_fixed_positions
@@ -130,7 +130,7 @@ def convert_to_enum(value: str, enum_type: Type[EnumType]) -> EnumType:
     default=True,
     help="Save visualization graphs.",
 )
-def local_single(
+def vispool_local_single(
     model_checkpoint: str,
     task_name: str,
     visualize: bool,
@@ -184,6 +184,36 @@ def local_single(
         if save_visualization_graphs:
             np.savez(f"visualisation-graphs-list-{model_checkpoint}.npz", *document_graphs)
         visualize_graph_with_fixed_positions(adj_matrices=document_graphs, out_dir=Path(visualization_dir))
+
+
+@cli.command()
+@click.argument("model-checkpoint", type=click.STRING)
+@click.argument("task-name", type=click.STRING)
+@click.option("--seed", default=42, type=int, help="Seed.")
+@click.option("--batch-size", default=32, type=int, help="Batch size.")
+@click.option("--num-workers", default=4, type=int, help="Number of workers.")
+@click.option("--enc-lr", default=1e-5, type=float, help="Encoder learning rate.")
+@click.option("--max-epochs", default=10, type=int, help="Max epochs.")
+def baseline_local_single(
+    model_checkpoint: str,
+    task_name: str,
+    seed: int,
+    batch_size: int,
+    num_workers: int,
+    enc_lr: float,
+    max_epochs: int,
+) -> None:
+    """Run a single local run for baseline."""
+
+    train_single_baseline_local(
+        model_checkpoint,
+        task_name,
+        seed=seed,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        enc_lr=enc_lr,
+        max_epochs=max_epochs,
+    )
 
 
 cli()
