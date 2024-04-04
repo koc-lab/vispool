@@ -63,7 +63,7 @@ class VisualVVGTransformer(VVGTransformer):
             self.log_dict(log_dict, prog_bar=True)
 
 
-def visualize_graph_with_fixed_positions(adj_matrices: list[np.ndarray], out_dir: Path) -> None:
+def visualize_graph_with_fixed_positions(adj_matrices: np.ndarray, out_dir: Path) -> None:
     num_nodes = len(adj_matrices[0])
     G_initial = nx.Graph()
     G_initial.add_nodes_from(range(num_nodes))
