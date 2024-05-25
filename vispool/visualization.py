@@ -94,3 +94,4 @@ def visualize_graph_with_fixed_positions(adj_matrices: np.ndarray, out_dir: Path
         plt.title(f"Sparsity Pattern at Epoch {i+1}, Density: {density:.2%}")
         plt.axis("off")
         plt.savefig(out_dir.joinpath(f"sparsity-epoch-{i+1}.eps"), bbox_inches="tight")
+        plt.close()
