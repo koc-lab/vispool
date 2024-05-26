@@ -6,7 +6,7 @@
 [![WandB](https://img.shields.io/badge/Weights_&_Biases-FFCC33?style=for-the-badge&logo=WeightsAndBiases&logoColor=black)](https://wandb.ai/tunakasif/vispool)
 [![GitHub License](https://img.shields.io/github/license/koc-lab/vispool?style=for-the-badge)](./LICENSE)
 
-Codebase for the paper _VISPool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks_, submitted to _ACL ARR February 2024_.
+Codebase for the paper _VISPool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks_, accepted to _ACL 2024 Findings_.
 
 ## TL;DR
 
@@ -17,7 +17,6 @@ We propose a vector visibility-based dynamic graph construction method for text 
 ## Abstract
 
 The emergence of transformers has revolutionized natural language processing (NLP), as evidenced in various NLP tasks. While graph neural networks (GNNs) show recent promise in NLP, they are not standalone replacements for transformers. Rather, recent research explores combining transformers and GNNs. Existing GNN-based approaches rely on static graph construction methods requiring excessive text processing, and most of them are not scalable with the increasing document and word counts. We address these limitations by proposing a novel dynamic graph construction method for text documents based on vector visibility graphs (VVGs) generated from transformer output. Then, we introduce visibility pooler (VISPool), a scalable model architecture that seamlessly integrates VVG convolutional networks into transformer pipelines. We evaluate the proposed model on the General Language Understanding Evaluation (GLUE) benchmark datasets. VISPool outperforms the baselines with less trainable parameters, demonstrating the viability of the visibility-based graph construction method for enhancing transformers with GNNs.
-
 
 ## Vector Visibility Graph Dependency
 
@@ -117,4 +116,3 @@ Then attach an agent to the created sweep with the given `SWEEP_ID`:
 ```bash
 python -m vispool vispool-agent a1b2c3d4
 ```
-
