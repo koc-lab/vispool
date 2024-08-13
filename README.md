@@ -6,7 +6,7 @@
 [![WandB](https://img.shields.io/badge/Weights_&_Biases-FFCC33?style=for-the-badge&logo=WeightsAndBiases&logoColor=black)](https://wandb.ai/tunakasif/vispool)
 [![GitHub License](https://img.shields.io/github/license/koc-lab/vispool?style=for-the-badge)](./LICENSE)
 
-Codebase for the paper _VISPool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks_, accepted to _ACL 2024 Findings_.
+Codebase for the paper [VISPool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks](https://aclanthology.org/2024.findings-acl.149/) published in _Findings of the Association for Computational Linguistics ACL 2024_.
 
 ## TL;DR
 
@@ -115,4 +115,21 @@ Then attach an agent to the created sweep with the given `SWEEP_ID`:
 
 ```bash
 python -m vispool vispool-agent a1b2c3d4
+```
+
+## Reference
+
+```bibtex
+@inproceedings{alikasifoglu-etal-2024-vispool,
+  title     = {{VISP}ool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks},
+  author    = {Alika{\c{s}}ifo{\u{g}}lu, Tuna  and Aras, Arda  and Koc, Aykut},
+  editor    = {Ku, Lun-Wei  and Martins, Andre  and Srikumar, Vivek},
+  booktitle = {Findings of the Association for Computational Linguistics ACL 2024},
+  month     = aug,
+  year      = {2024},
+  address   = {Bangkok, Thailand and virtual meeting},
+  publisher = {Association for Computational Linguistics},
+  url       = {https://aclanthology.org/2024.findings-acl.149},
+  pages     = {2547--2556}
+}
 ```
