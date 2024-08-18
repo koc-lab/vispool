@@ -119,6 +119,8 @@ python -m vispool vispool-agent a1b2c3d4
 
 ## Reference
 
+If you are using ACL anthology `.bib` file, you can cite the paper with `alikasifoglu-etal-2024-vispool` entry key, where the full entry is provided below.
+
 ```bibtex
 @inproceedings{alikasifoglu-etal-2024-vispool,
   title     = {{VISP}ool: Enhancing Transformer Encoders with Vector Visibility Graph Neural Networks},
